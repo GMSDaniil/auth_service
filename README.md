@@ -1,93 +1,205 @@
-# TU Runner – UniMap Auth Service
+# User Management API
 
-This repository contains the user management and authentication service for the TUBify app, developed during the PP3S project at TU Berlin. The service handles user-related operations such as login, registration, and saving user preferences (e.g., favorite meals and places).
+A robust ASP.NET Core 9.0 Web API for user authentication and management, featuring JWT token-based authentication, refresh tokens, and secure password hashing.
 
-## Tech Stack
+## Features
 
-- **Language**: C# (.NET 9)
-- **Framework**: ASP.NET Core Web API
-- **Architecture**: MVC (Controllers, Services, Models)
-- **Database**: PostgreSQL (required, runs via Docker Compose)
-- **Containerization**: Docker, Docker Compose
+- ✨ **User Registration & Login** - Secure user account creation and authentication
+- 🔐 **JWT Authentication** - Token-based authentication with refresh token support
+- 🛡️ **Password Security** - BCrypt password hashing for enhanced security
+- 🗄️ **PostgreSQL Integration** - Entity Framework Core with PostgreSQL database
+- 📋 **API Documentation** - Swagger/OpenAPI documentation
+- 🐳 **Docker Support** - Containerized deployment with Docker Compose
+- 🔄 **Refresh Tokens** - Long-lived refresh tokens for seamless user experience
+
+## Technology Stack
+
+- **Framework**: ASP.NET Core 9.0
+- **Database**: PostgreSQL with Entity Framework Core
+- **Authentication**: JWT (JSON Web Tokens)
+- **Password Hashing**: BCrypt.Net
+- **API Documentation**: Swagger/OpenAPI
+- **Containerization**: Docker
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 9.0 SDK
+- PostgreSQL database
+- Docker (optional, for containerized deployment)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Auth
+   ```
+
+2. **Set up environment variables**
+   
+   Create a `.env` file or set the following environment variables:
+   ```bash
+   DB_CONNECTION_STRING="Host=localhost;Database=userdb;Username=your_username;Password=your_password"
+   JWT_SECRET_KEY="your-super-secret-jwt-key-here"
+   JWT_EXPIRES_HOURS=12
+   JWT_REFRESH_TOKEN_EXPIRES_DAYS=14
+   ```
+
+3. **Install dependencies**
+   ```bash
+   dotnet restore
+   ```
+
+4. **Apply database migrations**
+   ```bash
+   dotnet ef database update
+   ```
+
+5. **Run the application**
+   ```bash
+   dotnet run
+   ```
+
+The API will be available at `http://localhost:5069` by default.
+
+### Docker Deployment
+
+1. **Build the Docker image**
+   ```bash
+   docker build -t tubify-user-manager .
+   ```
+
+2. **Run with Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+## API Endpoints
+
+### Authentication
+
+#### Register User
+```http
+POST /api/users/register
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+#### Login User
+```http
+POST /api/users/login
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "password": "SecurePassword123!"
+}
+```
+
+#### Refresh Token
+```http
+POST /api/tokens/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "your-refresh-token-here"
+}
+```
+
+#### Get Current User
+```http
+GET /api/users/me
+Authorization: Bearer your-jwt-token-here
+```
 
 ## Project Structure
 
 ```
-.
-├── Contracts/         # DTOs and request/response contracts
-├── Controllers/       # API endpoint definitions
-├── Data/              # DB context
-├── Entities/          # DB models
-├── Modells/           # Business models
-├── Services/          # Application logic
-├── Extensions/        # Custom extensions / helpers
-├── Migrations/        # EF Core migrations
-├── Properties/        # Project properties
-├── appsettings*.json  # Environment configuration
-├── Dockerfile         # Image definition
-├── docker-compose.yml # Compose file for API
+├── Controllers/           # API Controllers
+│   ├── UsersController.cs    # User management endpoints
+│   └── TokensController.cs   # Token refresh endpoints
+├── Services/             # Business logic services
+│   ├── UsersService.cs       # User operations
+│   ├── JwtProvider.cs        # JWT token generation
+│   ├── PasswordHasher.cs     # Password hashing
+│   └── RefreshTokenService.cs # Refresh token management
+├── Data/                 # Database context
+│   └── UserDbContext.cs      # Entity Framework context
+├── Entities/             # Database entities
+│   ├── UserEntity.cs         # User entity
+│   └── RefreshTokenEntity.cs # Refresh token entity
+├── Contracts/            # Request/Response DTOs
+├── Repositories/         # Data access layer
+├── Extensions/           # Extension methods
+└── Migrations/           # Database migrations
 ```
-
-## Running the Service
-
-1. Ensure Docker and Docker Compose are installed.
-2. Configure environment variables in `.env` or directly in [`docker-compose.yml`](docker-compose.yml).
-3. Start the service:
-
-    ```sh
-    docker compose up -d --build
-    ```
-
-> Backend will be available at: [http://localhost:5000](http://localhost:5000)  
-> Swagger UI: [http://localhost:5000/swagger/index.html](http://localhost:5000/swagger/index.html)
 
 ## Configuration
 
-App settings are stored in:
+The application uses environment variables for configuration:
 
-* [`appsettings.json`](appsettings.json)
-* [`appsettings.Development.json`](appsettings.Development.json)
-* `.env` (for DB credentials or secrets)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_CONNECTION_STRING` | PostgreSQL connection string | Required |
+| `JWT_SECRET_KEY` | Secret key for JWT signing | Required |
+| `JWT_EXPIRES_HOURS` | JWT token expiration time in hours | 12 |
+| `JWT_REFRESH_TOKEN_EXPIRES_DAYS` | Refresh token expiration in days | 14 |
 
-Environment variables used (see [`docker-compose.yml`](docker-compose.yml)):
+## Security Features
 
-- `DB_CONNECTION_STRING`
-- `JWT_SECRET_KEY`
-- `JWT_EXPIRES_HOURS`
-- `JWT_REFRESH_TOKEN_EXPIRES_DAYS`
+- **Password Hashing**: Uses BCrypt for secure password storage
+- **JWT Tokens**: Stateless authentication with configurable expiration
+- **Refresh Tokens**: Secure token refresh mechanism
+- **Environment Variables**: Sensitive configuration stored in environment variables
 
-Example DB connection string:
+## API Documentation
 
+When running the application, visit `/swagger` to access the interactive API documentation.
+
+## Database Schema
+
+The application uses Entity Framework Core migrations to manage the database schema:
+
+- **Users Table**: Stores user information (username, email, password hash)
+- **RefreshTokens Table**: Manages refresh tokens for authentication
+
+## Development
+
+### Running Tests
+```bash
+dotnet test
 ```
-Host=localhost;Port=5432;Database=unimap_auth;Username=postgres;Password=your_password
+
+### Applying Migrations
+```bash
+dotnet ef migrations add MigrationName
+dotnet ef database update
 ```
 
-## API Endpoints
+### Building for Production
+```bash
+dotnet publish -c Release -o ./publish
+```
 
-Main endpoints (see [Controllers](Controllers/)):
+## Contributing
 
-* `POST /api/Users/register` – Register a new user
-* `POST /api/Users/login` – Authenticate user and issue token
-* `GET /api/Users/getUser` – Get user profile and favorites
-* `POST /api/Users/addFavouriteMeal` – Add favorite meal
-* `DELETE /api/Users/removeFavouriteMeal/{id}` – Remove favorite meal
-* `POST /api/FavoritePlaces/add` – Add favorite place
-* `GET /api/FavoritePlaces` – Get favorite places
-* `DELETE /api/FavoritePlaces/{favoriteId}` – Remove favorite place
-* `GET /api/StudyProgram` – Get study programs
-* `POST /api/Tokens/refreshToken` – Refresh JWT token
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-> Full API documentation available at `/swagger/index.html` when running the service.
+## License
 
-## Notes
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-* Built as a microservice for the larger TUBify ecosystem
-* Intended to be run alongside other backend services (e.g., routing)
-* Uses EF Core for database migrations (see [`Migrations`](Migrations/))
-* Based on MVC principles and DTO separation
+## Support
 
----
-
-## Contributors
-
-Developed by the TU Berlin **PP3S Project Group D** in Summer Semester 2025
+For support and questions, please open an issue in the repository.
